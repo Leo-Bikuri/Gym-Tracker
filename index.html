@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BUILD MASS — Hypertrophy Plan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { background: #0a0a0a; color: #f0ede8; font-family: 'Georgia', serif; overflow-x: hidden; }
+
+    .header-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(44px, 9vw, 88px); letter-spacing: 0.04em; line-height: 0.9; }
+
+    .day-pill { font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 0.1em; padding: 10px 16px; border-radius: 4px; border: 1px solid #333; background: transparent; color: #888; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .day-pill:hover { border-color: #555; color: #bbb; }
+    .day-pill.active { border-color: var(--accent); color: var(--accent); background: rgba(255,255,255,0.04); }
+
+    .ex-card { border: 1px solid #222; border-radius: 10px; padding: 16px 18px; background: #111; transition: all 0.2s; position: relative; overflow: hidden; }
+    .ex-card::before { content:''; position: absolute; left:0; top:0; bottom:0; width:3px; background: var(--accent); opacity: 0.35; transition: opacity 0.2s; }
+    .ex-card.open::before, .ex-card:hover::before { opacity: 1; }
+    .ex-card.open { border-color: rgba(255,255,255,0.1); background: #141414; }
+
+    .badge { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 0.09em; text-transform: uppercase; padding: 3px 7px; border-radius: 3px; background: #1e1e1e; color: #555; }
+    .badge.compound { background: rgba(255,255,255,0.06); color: var(--accent); }
+
+    .log-input { background: #1a1a1a; border: 1px solid #2e2e2e; border-radius: 6px; color: #f0ede8; font-family: 'DM Sans', sans-serif; font-size: 15px; padding: 9px 12px; width: 100%; outline: none; transition: border-color 0.2s; -webkit-appearance: none; appearance: none; }
+    .log-input:focus { border-color: var(--accent, #E8FF47); }
+    .log-input::placeholder { color: #444; }
+
+    .log-btn { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.1em; font-size: 16px; padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; transition: all 0.2s; }
+    .log-btn.save { background: var(--accent, #E8FF47); color: #0a0a0a; }
+    .log-btn.save:active { opacity: 0.8; transform: scale(0.97); }
+    .log-btn.ghost { background: transparent; border: 1px solid #2e2e2e; color: #555; font-size: 12px; padding: 7px 14px; letter-spacing: 0.08em; }
+
+    .logged-dot { width: 7px; height: 7px; border-radius: 50%; background: #3ddc84; flex-shrink: 0; box-shadow: 0 0 6px rgba(61,220,132,0.5); }
+    .prev-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(61,220,132,0.08); border: 1px solid rgba(61,220,132,0.2); border-radius: 5px; padding: 6px 11px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: #3ddc84; }
+
+    .hist-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 6px; background: #1a1a1a; border: 1px solid #222; margin-top: 6px; }
+
+    .principle-card { background: #111; border: 1px solid #1e1e1e; border-radius: 8px; padding: 18px; transition: border-color 0.2s; }
+    .principle-card:hover { border-color: #333; }
+    .stat-box { background: #111; border: 1px solid #222; border-radius: 6px; padding: 12px 16px; text-align: center; }
+    .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+    .tab-bar { display: flex; border-bottom: 1px solid #1a1a1a; }
+    .tab-btn { flex: 1; padding: 14px 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; letter-spacing: 0.05em; background: transparent; border: none; color: #555; cursor: pointer; transition: all 0.2s; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+    .tab-btn.active { color: #f0ede8; border-bottom-color: #E8FF47; }
+
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #1a2a1a; border: 1px solid rgba(61,220,132,0.3); color: #3ddc84; font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 10px 20px; border-radius: 8px; z-index: 999; pointer-events: none; white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+
+    @media (max-width: 600px) {
+      .hdr-grid { flex-direction: column !important; }
+      .hdr-stats { flex-direction: row !important; gap: 8px !important; }
+      .stat-box { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+  const { useState, useEffect } = React;
+
+  const STORE_KEY = 'bm_log_v1';
+  const loadLog  = () => { try { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch { return {}; } };
+  const saveLog  = (l) => localStorage.setItem(STORE_KEY, JSON.stringify(l));
+  const exKey    = (n) => n.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+  const today    = () => new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+
+  /* ───── DATA ───── */
+  const rpeScale = [
+    {rpe:6,desc:"Very easy — 4+ reps left"},{rpe:7,desc:"Moderate — 3 reps left"},
+    {rpe:8,desc:"Hard — 2 reps left"},{rpe:9,desc:"Very hard — 1 rep left"},{rpe:10,desc:"Max effort — 0 reps left"},
+  ];
+
+  const deload = {
+    title:"Every 4th Week: DELOAD", sub:"Weeks 4, 8, 12",
+    desc:"Muscle growth requires stress AND recovery. A deload week consolidates neural adaptations and primes you for a stronger next block. Skipping deloads is the #1 reason intermediate lifters plateau.",
+    rules:[
+      {icon:"⬇️",label:"Reduce all sets to RPE 5–6",detail:"Same exercises, same rep ranges — but the weight should feel noticeably easy. This is intentional."},
+      {icon:"✅",label:"Keep all 4 training days",detail:"Don't skip sessions. The reduced intensity is the deload — frequency stays the same."},
+      {icon:"🔁",label:"Focus on technique refinement",detail:"With lighter weight you can obsess over form — use this week to clean up anything sloppy."},
+      {icon:"📝",label:"Plan next block's starting weights",detail:"Review your logbook. Set week 5, 9 opening weights at the deload week's load + 2.5–5kg."},
+      {icon:"😴",label:"Prioritise sleep even more",detail:"This is when adaptation actually cements. Target 8–9 hours during deload weeks."},
+    ],
+  };
+
+  const DAYS = [
+    { id:"mon",label:"MON",name:"Upper A",sub:"Horizontal Push + Pull",tag:"CHEST · BACK · ARMS",color:"#E8FF47",
+      ex:[
+        {n:"Barbell Bench Press",sets:4,reps:"6–10",rest:"3 min",muscle:"Chest",type:"compound",rpe:"6→8",rpeNote:"Wks 1–4: RPE 6. Wks 5–8: RPE 7. Wks 9–12: RPE 8. Start conservative — strength baseline unknown.",tip:"3s eccentric every rep — mandatory. Arch slightly, retract scapula. Pause briefly at chest."},
+        {n:"Barbell Bent-Over Row",sets:4,reps:"6–10",rest:"3 min",muscle:"Back",type:"compound",rpe:"6→8",rpeNote:"Match bench RPE phase for phase. Form breaking down = you've exceeded RPE — reduce weight.",tip:"Hinge ~45°. Drive elbows back, not out. 2–3s controlled lowering every rep.",upgrade:"Wk 5+: Swap → Chest-Supported DB Row"},
+        {n:"Incline Dumbbell Press",sets:3,reps:"10–15",rest:"90s",muscle:"Upper Chest",type:"isolation",rpe:"7→9",rpeNote:"Wks 1–4: RPE 7. Wks 5–8: RPE 8. Wks 9–12: RPE 9.",tip:"30–45° incline. Full stretch at bottom for maximum pec stretch."},
+        {n:"Seated Cable Row",sets:3,reps:"10–15",rest:"90s",muscle:"Mid Back",type:"isolation",rpe:"7→9",rpeNote:"Wks 1–4: RPE 7. Wks 5–12: RPE 8–9. Push harder than compound rows.",tip:"Keep chest up. Pull to lower chest. Pause and squeeze."},
+        {n:"Dumbbell Lateral Raise",sets:3,reps:"15–20",rest:"60s",muscle:"Side Delts",type:"isolation",rpe:"8→9",rpeNote:"Low systemic stress — RPE 8–9 from week 1. The burn is normal.",tip:"Slight elbow bend. Lead with elbows, not hands. Slow on the way down."},
+        {n:"Tricep Cable Pushdown",sets:3,reps:"12–15",rest:"60s",muscle:"Triceps",type:"isolation",rpe:"8→9",rpeNote:"RPE 8 from week 1. Arm isolations don't tax recovery like squats/deadlifts.",tip:"Elbows pinned to sides. Full extension at bottom."},
+        {n:"Barbell / DB Bicep Curl",sets:3,reps:"10–15",rest:"60s",muscle:"Biceps",type:"isolation",rpe:"8→9",rpeNote:"RPE 8 from week 1. Last set can push to RPE 9 once form is locked.",tip:"Don't swing. Supinate wrist at top. Full stretch at bottom."},
+      ]
+    },
+    { id:"tue",label:"TUE",name:"Lower A",sub:"Quad Dominant",tag:"QUADS · HAMSTRINGS · CALVES",color:"#FF6B35",
+      ex:[
+        {n:"Barbell Back Squat",sets:4,reps:"6–10",rest:"3 min",muscle:"Quads",type:"compound",rpe:"6→8",rpeNote:"Wks 1–4: RPE 6 ONLY. Technical movement — pattern needs regrooving. Never exceed RPE 8 as a returning lifter.",tip:"2–3s eccentric descent — non-negotiable. Depth to at least parallel. Chest up, knees tracking toes. Full 3 min rest."},
+        {n:"Romanian Deadlift",sets:3,reps:"10–12",rest:"2 min",muscle:"Hamstrings",type:"compound",rpe:"7→8",rpeNote:"Wks 1–4: RPE 7. Wks 5+: RPE 8. DOMS from RDL severe when returning — RPE 7 protects this.",tip:"3s eccentric — lower slowly, feel full hamstring stretch before reversing. Bar stays close to legs."},
+        {n:"Leg Press",sets:3,reps:"12–15",rest:"90s",muscle:"Quads",type:"isolation",rpe:"7→9",rpeNote:"Safer than squat — push RPE higher sooner. RPE 7 wks 1–4, RPE 8–9 wks 5+.",tip:"Feet shoulder-width. Full range. Don't lock out knees at top."},
+        {n:"Seated Leg Curl",sets:3,reps:"12–15",rest:"90s",muscle:"Hamstrings",type:"isolation",rpe:"8→9",rpeNote:"RPE 8 from week 1. Less DOMS risk than RDL at this RPE.",tip:"Curl fully, hold 1s at peak contraction. Slow eccentric."},
+        {n:"Standing Calf Raise",sets:4,reps:"15–20",rest:"60s",muscle:"Calves",type:"isolation",rpe:"8→9",rpeNote:"RPE 8–9 from week 1. Calves recover fast and respond to higher effort.",tip:"Full range — full stretch at bottom. 2s pause at top."},
+      ]
+    },
+    { id:"wed",label:"WED",name:"Rest",sub:"Active Recovery",tag:"RECOVERY",color:"#888",rest:true,
+      tips:["Light 20–30 min walk — aim to hit 8,000 steps today","Foam roll: quads, hamstrings, lats","Static stretching for hips & thoracic spine","Prioritise 7–9 hours sleep","Eat at or slightly above maintenance calories"]
+    },
+    { id:"thu",label:"THU",name:"Upper B",sub:"Vertical Push + Pull",tag:"SHOULDERS · LATS · ARMS",color:"#47C8FF",
+      ex:[
+        {n:"Barbell Overhead Press",sets:4,reps:"6–10",rest:"3 min",muscle:"Shoulders",type:"compound",rpe:"6→8",rpeNote:"Wks 1–4: RPE 6. Trickiest compound — shoulder mobility and core bracing take weeks to reestablish.",tip:"2–3s eccentric every rep. Brace core hard. Press bar slightly back at lockout. No excessive lumbar arch."},
+        {n:"Lat Pulldown / Pull-Ups",sets:4,reps:"8–12",rest:"2 min",muscle:"Lats",type:"compound",rpe:"7→8",rpeNote:"Wks 1–4: RPE 7. Wks 5+: RPE 8. Lats need proper mind-muscle connection first.",tip:"Pull to upper chest. Initiate with lats, not biceps. Full stretch at top."},
+        {n:"Dumbbell Shoulder Press",sets:3,reps:"10–15",rest:"90s",muscle:"Delts",type:"isolation",rpe:"7→9",rpeNote:"Week 1–4 RPE 7, week 5+ RPE 8–9.",tip:"Slight forward tilt. Don't fully lockout — keeps tension on delts."},
+        {n:"Cable Straight-Arm Pulldown",sets:3,reps:"12–15",rest:"90s",muscle:"Lats",type:"isolation",rpe:"8→9",rpeNote:"Low injury risk — RPE 8 from week 1. Great for lat mind-muscle connection.",tip:"Keep arms straight. Think about pulling your elbows to hips."},
+        {n:"Face Pulls",sets:3,reps:"15–20",rest:"60s",muscle:"Rear Delts / Rotator Cuff",type:"isolation",rpe:"7→8",rpeNote:"Never above RPE 8. Health movement as much as hypertrophy. Quality over load.",tip:"Essential for shoulder health. Pull to face level. Externally rotate at end."},
+        {n:"Skull Crushers (EZ-Bar)",sets:3,reps:"10–15",rest:"60s",muscle:"Triceps",type:"isolation",rpe:"8→9",rpeNote:"RPE 8 from week 1. Elbow flare or pain = reduce load immediately.",tip:"Lower bar behind the head for max long-head stretch. 2s eccentric.",upgrade:"Wk 5+: Swap → Cable Overhead Extension"},
+        {n:"Incline DB Hammer Curl",sets:3,reps:"10–15",rest:"60s",muscle:"Biceps / Brachialis",type:"isolation",rpe:"8→9",rpeNote:"RPE 8–9 from week 1. Last set can go to RPE 9.",tip:"Incline creates better stretch. Don't swing arms forward."},
+      ]
+    },
+    { id:"fri",label:"FRI",name:"Lower B",sub:"Hip Dominant",tag:"POSTERIOR CHAIN · GLUTES",color:"#B847FF",
+      ex:[
+        {n:"Conventional Deadlift",sets:4,reps:"5–8",rest:"3 min",muscle:"Full Posterior Chain",type:"compound",rpe:"6→8",rpeNote:"Wks 1–4: RPE 6 MAXIMUM. Highest CNS-demand lift. RPE 8+ in week 1 is a recipe for injury.",tip:"2–3s controlled lowering. Neutral spine non-negotiable — rounding = exceeded capacity. Drive floor away. Reset every rep."},
+        {n:"Bulgarian Split Squat",sets:3,reps:"10–12 / side",rest:"2 min",muscle:"Quads / Glutes",type:"compound",rpe:"7→8",rpeNote:"Wks 1–4: RPE 7. Feels harder than RPE suggests due to balance — that's normal.",tip:"Hardest exercise you'll do. Builds unilateral strength and mass. Go slow."},
+        {n:"Leg Press (Close Stance)",sets:3,reps:"12–15",rest:"90s",muscle:"Quads",type:"isolation",rpe:"7→9",rpeNote:"RPE 7 wks 1–4, RPE 8–9 from wk 5.",tip:"Higher foot placement = more glutes/hamstrings. Low = quads."},
+        {n:"Leg Extension",sets:3,reps:"12–15",rest:"60s",muscle:"Quads",type:"isolation",rpe:"8→9",rpeNote:"RPE 8 from week 1. Low systemic fatigue — push these. Last set RPE 9 fine.",tip:"Full range. Squeeze top for 1s. Keep hips back in seat."},
+        {n:"Seated Calf Raise",sets:4,reps:"15–20",rest:"60s",muscle:"Soleus",type:"isolation",rpe:"8→9",rpeNote:"RPE 8–9 from week 1. Full stretch and squeeze every rep.",tip:"Hits soleus (different to standing calf raise). Don't skip."},
+      ]
+    },
+    { id:"sat",label:"SAT",name:"Rest",sub:"Full Rest / Cardio",tag:"RECOVERY",color:"#888",rest:true,
+      tips:["Target: 8,000–10,000 steps — your primary cardio tool","Optional: 20 min low-intensity cycling (LISS)","Mobility work or yoga","Prep and cook high-protein meals for the week","Hydrate: aim for 3L of water"]
+    },
+    { id:"sun",label:"SUN",name:"Rest",sub:"Full Rest",tag:"RECOVERY",color:"#888",rest:true,
+      tips:["Complete rest — muscle grows during recovery","Review next week's progressive overload targets","Aim for 8+ hours sleep tonight","Light walk if desired","Reflect on week: what felt strong? what needs work?"]
+    },
+  ];
+
+  const PILLARS = [
+    {icon:"📈",title:"Progressive Overload",desc:"Add weight or 1 rep each session. This is the #1 driver of hypertrophy. Track every session."},
+    {icon:"🎯",title:"Rep Range & Volume",desc:"8–12 reps is the hypertrophy sweet spot. 10–20 weekly sets per muscle group (start at lower end)."},
+    {icon:"😴",title:"Sleep = Gains",desc:"7–9 hours is non-negotiable. GH and testosterone peak during deep sleep. Skimping kills progress."},
+    {icon:"🥩",title:"Protein Target",desc:"Aim for 150–165g protein/day (2.0–2.2g/kg). Prioritise: chicken, eggs, Greek yoghurt, whey."},
+    {icon:"🔥",title:"Caloric Surplus",desc:"~2,600–2,900 kcal/day (250–400 kcal surplus). Low NEAT means a smaller surplus is enough."},
+    {icon:"🔁",title:"RIR (Reps in Reserve)",desc:"Leave 1–2 reps in the tank. Training to failure every set increases injury risk and impairs recovery."},
+    {icon:"👟",title:"NEAT & Steps",desc:"Averaging 6,000 steps/day — below optimal. Build to 8,000–10,000/day. Boosts insulin sensitivity and aids recovery without taxing the CNS."},
+  ];
+
+  /* ───── WEIGHT LOGGER COMPONENT ───── */
+  function WeightLogger({ ex, accent, onSaved }) {
+    const k = exKey(ex.n);
+    const [entries, setEntries] = useState(() => (loadLog()[k] || []));
+    const last = entries[entries.length - 1];
+    const loggedToday = last && last.date === today();
+    const [wt, setWt]     = useState(loggedToday ? last.weight : '');
+    const [note, setNote] = useState(loggedToday ? (last.note || '') : '');
+    const [hist, setHist] = useState(false);
+
+    function save() {
+      if (!wt.trim()) return;
+      const log = loadLog();
+      const prev = log[k] || [];
+      const entry = { date: today(), weight: wt.trim(), note: note.trim() };
+      const updated = loggedToday ? [...prev.slice(0,-1), entry] : [...prev, entry];
+      log[k] = updated.slice(-20);
+      saveLog(log);
+      setEntries(log[k]);
+      onSaved(ex.n);
+    }
+
+    const prevSessions = entries.filter(e => e.date !== today()).slice(-6).reverse();
+
+    return (
+      <div onClick={e => e.stopPropagation()} style={{marginTop:14,paddingTop:14,borderTop:'1px solid #222'}}>
+        {last && (
+          <div style={{marginBottom:12}}>
+            <div className="prev-badge" style={loggedToday ? {background:'rgba(61,220,132,0.12)',borderColor:'rgba(61,220,132,0.35)'} : {}}>
+              <span>{loggedToday ? '✅' : '⏱'}</span>
+              <span>{loggedToday ? 'Logged today:' : 'Last session:'} <strong>{last.weight} kg</strong> — {last.date}</span>
+              {last.note && <span style={{fontSize:11,opacity:0.8}}>· {last.note}</span>}
+            </div>
+          </div>
+        )}
+
+        <div style={{display:'flex',gap:8,marginBottom:8}}>
+          <div style={{flex:1}}>
+            <div style={{fontFamily:'DM Sans,sans-serif',fontSize:10,letterSpacing:'0.1em',color:'#555',textTransform:'uppercase',marginBottom:5}}>Weight (kg)</div>
+            <input className="log-input" style={{'--accent':accent}} type="number" inputMode="decimal"
+              placeholder={last ? last.weight : "e.g. 60"} value={wt} onChange={e=>setWt(e.target.value)} />
+          </div>
+          <div style={{flex:1.5}}>
+            <div style={{fontFamily:'DM Sans,sans-serif',fontSize:10,letterSpacing:'0.1em',color:'#555',textTransform:'uppercase',marginBottom:5}}>Note (optional)</div>
+            <input className="log-input" style={{'--accent':accent}} type="text"
+              placeholder="e.g. felt strong" value={note} onChange={e=>setNote(e.target.value)} />
+          </div>
+        </div>
+
+        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          <button className="log-btn save" style={{'--accent':accent}} onClick={save}>
+            {loggedToday ? 'UPDATE' : 'LOG WEIGHT'}
+          </button>
+          {prevSessions.length > 0 && (
+            <button className="log-btn ghost" onClick={()=>setHist(v=>!v)}>
+              {hist ? 'HIDE' : `HISTORY (${prevSessions.length})`}
+            </button>
+          )}
+        </div>
+
+        {hist && prevSessions.length > 0 && (
+          <div style={{marginTop:12}}>
+            <div style={{fontFamily:'DM Sans,sans-serif',fontSize:10,letterSpacing:'0.12em',color:'#444',textTransform:'uppercase',marginBottom:8}}>Previous Sessions</div>
+            {prevSessions.map((e,i) => (
+              <div key={i} className="hist-row">
+                <div style={{fontFamily:'DM Sans,sans-serif',fontSize:12,color:'#555'}}>{e.date}</div>
+                <div style={{display:'flex',alignItems:'center',gap:10}}>
+                  {e.note && <div style={{fontFamily:'DM Sans,sans-serif',fontSize:11,color:'#444',fontStyle:'italic'}}>{e.note}</div>}
+                  <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:18,color:'#f0ede8',letterSpacing:'0.04em'}}>{e.weight} kg</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ───── HISTORY TAB ───── */
+  function HistoryView() {
+    const [log, setLog] = useState(loadLog);
+    const allEx = DAYS.flatMap(d => d.ex || []);
+    const logged = allEx.filter(ex => { const k=exKey(ex.n); return log[k]&&log[k].length>0; });
+
+    function clearAll() {
+      if (window.confirm('Clear ALL workout logs? This cannot be undone.')) {
+        localStorage.removeItem(STORE_KEY);
+        setLog({});
+      }
+    }
+
+    if (logged.length === 0) return (
+      <div style={{padding:'60px 20px',textAlign:'center'}}>
+        <div style={{fontSize:44,marginBottom:16}}>📋</div>
+        <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:28,letterSpacing:'0.08em',color:'#2a2a2a',marginBottom:8}}>No Logs Yet</div>
+        <div style={{fontFamily:'DM Sans,sans-serif',fontSize:14,color:'#444',lineHeight:1.7,maxWidth:280,margin:'0 auto'}}>
+          Head to a training day, tap an exercise, and log your first weight. It'll appear here.
+        </div>
+      </div>
+    );
+
+    return (
+      <div style={{padding:'24px 20px 60px',maxWidth:860,margin:'0 auto'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:24}}>
+          <div>
+            <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:30,letterSpacing:'0.05em'}}>WEIGHT LOG</div>
+            <div style={{fontFamily:'DM Sans,sans-serif',fontSize:12,color:'#555',marginTop:2}}>{logged.length} exercises tracked</div>
+          </div>
+          <button className="log-btn ghost" style={{fontSize:11}} onClick={clearAll}>CLEAR ALL</button>
+        </div>
+
+        {logged.map((ex,ei) => {
+          const k = exKey(ex.n);
+          const entries = [...(log[k]||[])].reverse();
+          const latest = entries[0];
+          const prev   = entries[1];
+          const diff   = latest && prev ? (parseFloat(latest.weight) - parseFloat(prev.weight)).toFixed(1) : null;
+          const diffCol = diff > 0 ? '#3ddc84' : diff < 0 ? '#ff6b6b' : '#888';
+
+          return (
+            <div key={ei} style={{marginBottom:14,background:'#111',border:'1px solid #1e1e1e',borderRadius:10,overflow:'hidden'}}>
+              <div style={{padding:'14px 18px',background:'#141414',borderBottom:'1px solid #1e1e1e',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:8}}>
+                <div>
+                  <div style={{fontFamily:'DM Sans,sans-serif',fontSize:14,fontWeight:500,color:'#f0ede8'}}>{ex.n}</div>
+                  <div style={{fontFamily:'DM Sans,sans-serif',fontSize:11,color:'#555',marginTop:2}}>{ex.muscle} · {ex.sets}×{ex.reps}</div>
+                </div>
+                <div style={{textAlign:'right'}}>
+                  <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:26,color:'#f0ede8',letterSpacing:'0.04em'}}>{latest.weight} kg</div>
+                  {diff !== null && (
+                    <div style={{fontFamily:'DM Sans,sans-serif',fontSize:12,color:diffCol}}>
+                      {diff > 0 ? `+${diff}` : diff} kg vs last
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div style={{padding:'12px 18px'}}>
+                {entries.slice(0,8).map((e,i) => (
+                  <div key={i} className="hist-row" style={{marginTop:i>0?6:0}}>
+                    <div style={{fontFamily:'DM Sans,sans-serif',fontSize:12,color:'#555'}}>{e.date}</div>
+                    <div style={{display:'flex',alignItems:'center',gap:10}}>
+                      {e.note && <div style={{fontFamily:'DM Sans,sans-serif',fontSize:11,color:'#444',fontStyle:'italic'}}>{e.note}</div>}
+                      <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:18,color:i===0?'#E8FF47':'#f0ede8',letterSpacing:'0.04em'}}>{e.weight} kg</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  /* ───── APP ───── */
+  function App() {
+    const [tab, setTab]       = useState('plan');
+    const [day, setDay]       = useState('mon');
+    const [openEx, setOpenEx] = useState(null);
+    const [rpeOpen, setRpeOpen] = useState(false);
+    const [toast, setToast]   = useState(null);
+    const [logVer, setLogVer] = useState(0);
+
+    const D  = DAYS.find(d => d.id === day);
+    const ac = D.color;
+
+    function showToast(name) {
+      setToast(`✓ ${name} logged`);
+      setTimeout(() => setToast(null), 2000);
+    }
+
+    function getLastWeight(name) {
+      const log = loadLog(); const k = exKey(name);
+      const e = log[k] || []; return e[e.length-1] || null;
+    }
+
+    return (
+      <div style={{minHeight:'100vh',background:'#0a0a0a',color:'#f0ede8'}}>
+        {toast && <div className="toast">{toast}</div>}
+
+        {/* HEADER */}
+        <div style={{padding:'36px 20px 24px',borderBottom:'1px solid #1a1a1a'}}>
+          <div style={{maxWidth:860,margin:'0 auto'}}>
+            <div className="hdr-grid" style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',flexWrap:'wrap',gap:16}}>
+              <div>
+                <div style={{fontFamily:'DM Sans,sans-serif',fontSize:10,letterSpacing:'0.2em',color:'#444',marginBottom:10,textTransform:'uppercase'}}>Science-Backed Hypertrophy Programme</div>
+                <div className="header-title">BUILD<br /><span style={{color:'#E8FF47'}}>MASS</span></div>
+                <div style={{fontFamily:'DM Sans,sans-serif',fontSize:12,color:'#444',marginTop:12,lineHeight:1.6}}>4-Day Upper / Lower · 2× per muscle · Wks 1–12</div>
+              </div>
+              <div className="hdr-stats" style={{display:'flex',flexDirection:'column',gap:6}}>
+                {[["HEIGHT","190 cm"],["WEIGHT","75 kg"],["AGE","24 yrs"]].map(([k,v])=>(
+                  <div key={k} className="stat-box">
+                    <div style={{fontFamily:'DM Sans,sans-serif',fontSize:9,letterSpacing:'0.15em',color:'#444'}}>{k}</div>
+                    <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:20,color:'#f0ede8',letterSpacing:'0.05em'}}>{v}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* TABS */}
+        <div className="tab-bar">
+          <button className={"tab-btn"+(tab==='plan'?' active':'')} onClick={()=>setTab('plan')}>📋 WORKOUT PLAN</button>
+          <button className={"tab-btn"+(tab==='history'?' active':'')} onClick={()=>{ setTab('history'); setLogVer(v=>v+1); }}>📊 WEIGHT LOG</button>
+        </div>
+
+        {tab==='history' && <HistoryView key={logVer} />}
+
+        {tab==='plan' && <>
+          {/* DAY PILLS */}
+          <div style={{padding:'14px 20px',borderBottom:'1px solid #1a1a1a'}}>
+            <div style={{maxWidth:860,margin:'0 auto'}}>
+              <div className="scrollbar-hide" style={{display:'flex',gap:8,overflowX:'auto',paddingBottom:4}}>
+                {DAYS.map(d=>(
+                  <button key={d.id} className={"day-pill"+(day===d.id?' active':'')}
+                    style={{'--accent':d.color}} onClick={()=>{setDay(d.id);setOpenEx(null);}}>
+                    {d.label}
+                    <span style={{display:'block',fontSize:9,marginTop:2,fontFamily:'DM Sans,sans-serif',fontWeight:300}}>{d.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div style={{padding:'24px 20px 60px',maxWidth:860,margin:'0 auto','--accent':ac}}>
+            {/* Day header */}
+            <div style={{marginBottom:20}}>
+              <div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
+                <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:44,letterSpacing:'0.05em',lineHeight:1,color:ac}}>{D.name}</div>
+                <div>
+                  <div style={{fontFamily:'DM Sans,sans-serif',fontSize:13,color:'#aaa'}}>{D.sub}</div>
+                  <div style={{fontFamily:'DM Sans,sans-serif',fontSize:10,letterSpacing:'0.15em',color:'#555',marginTop:3}}>{D.tag}</div>
+                </div>
+              </div>
+              {!D.rest && (
+                <div style={{marginTop:10,display:'flex',gap:16,fontFamily:'DM Sans,sans-serif',fontSize:12,color:'#555',flexWrap:'wrap'}}>
+                  <span>🏋️ {D.ex.length} exercises</span><span>⏱ ~60–75 min</span><span>👆 Tap to expand + log weight</span>
+                </div>
+              )}
+            </div>
+
+            {/* REST */}
+            {D.rest && (
+              <div style={{background:'#111',border:'1px solid #222',borderRadius:12,padding:24}}>
+                <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:20,letterSpacing:'0.1em',color:'#444',marginBottom:14}}>REST & RECOVERY</div>
+                <div style={{fontFamily:'DM Sans,sans-serif',fontSize:13,color:'#555',marginBottom:16,lineHeight:1.7}}>
+                  Muscle growth happens during recovery, not in the gym. Protect these days.
+                </div>
+                {D.tips.map((t,i)=>(
+                  <div key={i} style={{display:'flex',alignItems:'flex-start',gap:10,marginBottom:10}}>
+                    <div style={{width:5,height:5,borderRadius:'50%',background:'#333',marginTop:8,flexShrink:0}}/>
+                    <div style={{fontFamily:'DM Sans,sans-serif',fontSize:13,color:'#888',lineHeight:1.5}}>{t}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* EXERCISES */}
+            {!D.rest && (
+              <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                {D.ex.map((ex,i)=>{
+                  const isOpen = openEx===i;
+                  const prev   = getLastWeight(ex.n);
+                  const todayLogged = prev && prev.date===today();
+
+                  return (
+                    <div key={i} className={"ex-card"+(isOpen?' open':'')} style={{'--accent':ac}}
+                      onClick={()=>setOpenEx(isOpen?null:i)}>
+                      {/* Row */}
+                      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}>
+                        <div style={{display:'flex',alignItems:'center',gap:10,flex:1,minWidth:0}}>
+                          <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:12,color:'#333',minWidth:20}}>{String(i+1).padStart(2,'0')}</div>
+                          <div style={{minWidth:0}}>
+                            <div style={{display:'flex',alignItems:'center',gap:6}}>
+                              <div style={{fontFamily:'DM Sans,sans-serif',fontSize:14,fontWeight:500,color:'#f0ede8',lineHeight:1.3}}>{ex.n}</div>
+                              {todayLogged && <div className="logged-dot" />}
+                            </div>
+                            <div style={{display:'flex',gap:8,alignItems:'center',marginTop:2,flexWrap:'wrap'}}>
+                              <div style={{fontFamily:'DM Sans,sans-serif',fontSize:11,color:'#555'}}>{ex.muscle}</div>
+                              {prev && !todayLogged && <div style={{fontFamily:'DM Sans,sans-serif',fontSize:11,color:'#3ddc84'}}>↑ Last: {prev.weight}kg</div>}
+                              {todayLogged && <div style={{fontFamily:'DM Sans,sans-serif',fontSize:11,color:'#3ddc84'}}>✓ {prev.weight}kg today</div>}
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{display:'flex',alignItems:'center',gap:7,flexShrink:0}}>
+                          <span className={"badge"+(ex.type==='compound'?' compound':'')}>{ex.type}</span>
+                          <div style={{textAlign:'right'}}>
+                            <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:16,color:ac,letterSpacing:'0.05em'}}>{ex.sets}×{ex.reps}</div>
+                            <div style={{fontFamily:'DM Sans,sans-serif',fontSize:10,color:'#444'}}>{ex.rest}</div>
+                          </div>
+                          <div style={{background:'#1a1a1a',border:'1px solid #2a2a2a',borderRadius:4,padding:'3px 7px',textAlign:'center'}}>
+                            <div style={{fontFamily:'DM Sans,sans-serif',fontSize:8,letterSpacing:'0.1em',color:'#444',textTransform:'uppercase'}}>RPE</div>
+                            <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:14,color:ac,lineHeight:1.1}}>{ex.rpe}</div>
+                          </div>
+                          <div style={{color:'#333',fontSize:14,transition:'transform 0.2s',transform:isOpen?'rotate(180deg)':'rotate(0)'}}>▾</div>
+                        </div>
+                      </div>
+
+                      {/* Expanded */}
+                      {isOpen && (
+                        <div>
+                          <div style={{marginTop:14,paddingTop:14,borderTop:'1px solid #1e1e1e'}}>
+                            <div style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:6,padding:'9px 13px',fontFamily:'DM Sans,sans-serif',fontSize:13,color:'#777',lineHeight:1.65,marginBottom:10}}>
+                              <span style={{color:ac,fontWeight:500,fontSize:10,letterSpacing:'0.1em',textTransform:'uppercase'}}>RPE Target · </span>{ex.rpeNote}
+                            </div>
+                            <div style={{fontFamily:'DM Sans,sans-serif',fontSize:13,color:'#777',lineHeight:1.7,marginBottom:8}}>
+                              <span style={{color:ac,fontWeight:500}}>Coaching cue: </span>{ex.tip}
+                            </div>
+                            {ex.upgrade && (
+                              <div style={{display:'inline-flex',alignItems:'center',gap:7,background:'rgba(71,200,255,0.07)',border:'1px solid rgba(71,200,255,0.2)',borderRadius:5,padding:'6px 11px',fontFamily:'DM Sans,sans-serif',fontSize:12,color:'#47C8FF'}}>
+                                ⚡ {ex.upgrade}
+                              </div>
+                            )}
+                          </div>
+                          <WeightLogger key={logVer+'-'+i} ex={ex} accent={ac} onSaved={name=>{ setLogVer(v=>v+1); showToast(name); }} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* PO note */}
+            {!D.rest && (
+              <div style={{marginTop:18,background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.05)',borderRadius:8,padding:'12px 16px',fontFamily:'DM Sans,sans-serif',fontSize:13,color:'#666',lineHeight:1.6}}>
+                <span style={{color:ac,fontWeight:500}}>Progressive Overload Rule: </span>
+                Hit the top of the rep range on all sets? Add 2.5–5kg next session. Can't hit the bottom? Reduce weight. Form always comes first.
+              </div>
+            )}
+
+            {/* RPE toggle */}
+            {!D.rest && (
+              <div style={{marginTop:12}}>
+                <button onClick={e=>{e.stopPropagation();setRpeOpen(v=>!v);}}
+                  style={{background:'transparent',border:'1px solid #222',borderRadius:6,padding:'9px 14px',color:'#444',fontFamily:'DM Sans,sans-serif',fontSize:11,letterSpacing:'0.08em',cursor:'pointer',display:'flex',alignItems:'center',gap:7}}>
+                  📊 RPE SCALE REFERENCE
+                  <span style={{transition:'transform 0.2s',transform:rpeOpen?'rotate(180deg)':'rotate(0)',display:'inline-block'}}>▾</span>
+                </button>
+                {rpeOpen && (
+                  <div style={{marginTop:8,background:'#111',border:'1px solid #1e1e1e',borderRadius:8,overflow:'hidden'}}>
+                    <div style={{padding:'10px 14px 6px',fontFamily:'DM Sans,sans-serif',fontSize:10,letterSpacing:'0.15em',color:'#333',textTransform:'uppercase'}}>RPE — How hard is the set?</div>
+                    {rpeScale.map(r=>{
+                      const col=r.rpe<=6?'#47C8FF':r.rpe<=7?'#E8FF47':r.rpe<=8?'#FF6B35':'#ff4444';
+                      return (
+                        <div key={r.rpe} style={{padding:'7px 14px',display:'flex',alignItems:'center',gap:10,borderBottom:'1px solid #161616'}}>
+                          <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:20,color:col,minWidth:24}}>{r.rpe}</div>
+                          <div style={{flex:1}}><div style={{height:3,background:'#1e1e1e',borderRadius:2,overflow:'hidden'}}><div style={{width:`${(r.rpe/10)*100}%`,height:'100%',background:col,borderRadius:2}}/></div></div>
+                          <div style={{fontFamily:'DM Sans,sans-serif',fontSize:11,color:'#666',minWidth:130}}>{r.desc}</div>
+                        </div>
+                      );
+                    })}
+                    <div style={{padding:'8px 14px',fontFamily:'DM Sans,sans-serif',fontSize:10,color:'#333',lineHeight:1.6}}>
+                      Wks 1–4 → Compounds RPE 6–7 · Isolations RPE 7–8 | Wks 5–8 → 7–8 / 8–9 | Wks 9–12 → 8–9 / 9
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* PILLARS */}
+          <div style={{borderTop:'1px solid #1a1a1a',padding:'32px 20px 60px'}}>
+            <div style={{maxWidth:860,margin:'0 auto'}}>
+              <div style={{fontFamily:'DM Sans,sans-serif',fontSize:10,letterSpacing:'0.2em',color:'#444',marginBottom:6,textTransform:'uppercase'}}>Research-Backed</div>
+              <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:30,letterSpacing:'0.05em',marginBottom:20,color:'#f0ede8'}}>THE SEVEN PILLARS</div>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:10}}>
+                {PILLARS.map((p,i)=>(
+                  <div key={i} className="principle-card">
+                    <div style={{fontSize:22,marginBottom:8}}>{p.icon}</div>
+                    <div style={{fontFamily:'DM Sans,sans-serif',fontSize:13,fontWeight:500,color:'#f0ede8',marginBottom:5}}>{p.title}</div>
+                    <div style={{fontFamily:'DM Sans,sans-serif',fontSize:12,color:'#555',lineHeight:1.6}}>{p.desc}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Nutrition */}
+              <div style={{marginTop:20,background:'#0f0f0f',border:'1px solid #222',borderRadius:10,padding:'20px 22px'}}>
+                <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:18,letterSpacing:'0.08em',color:'#E8FF47',marginBottom:12}}>DAILY NUTRITION TARGETS</div>
+                <div style={{display:'flex',gap:14,flexWrap:'wrap'}}>
+                  {[["Calories","2,600–2,900 kcal","250–400 kcal surplus"],["Protein","150–165 g","2.0–2.2g per kg"],["Carbs","330–400 g","Primary training fuel"],["Fats","70–90 g","Hormonal health"]].map(([l,v,s])=>(
+                    <div key={l} style={{flex:'1 1 110px'}}>
+                      <div style={{fontFamily:'DM Sans,sans-serif',fontSize:10,letterSpacing:'0.1em',color:'#444',textTransform:'uppercase',marginBottom:3}}>{l}</div>
+                      <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:22,color:'#f0ede8',letterSpacing:'0.04em'}}>{v}</div>
+                      <div style={{fontFamily:'DM Sans,sans-serif',fontSize:11,color:'#444',marginTop:2}}>{s}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Deload */}
+              <div style={{marginTop:20,background:'#0f0f0f',border:'1px solid #2a2a2a',borderRadius:10,overflow:'hidden'}}>
+                <div style={{background:'#141414',padding:'14px 20px',borderBottom:'1px solid #1e1e1e',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10}}>
+                  <div>
+                    <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:18,letterSpacing:'0.08em',color:'#ff4444'}}>{deload.title}</div>
+                    <div style={{fontFamily:'DM Sans,sans-serif',fontSize:11,color:'#555',marginTop:1}}>{deload.sub}</div>
+                  </div>
+                  <div style={{fontFamily:'DM Sans,sans-serif',fontSize:10,background:'rgba(255,68,68,0.1)',border:'1px solid rgba(255,68,68,0.2)',color:'#ff6666',padding:'3px 9px',borderRadius:4,letterSpacing:'0.1em'}}>NIPPARD VALIDATED</div>
+                </div>
+                <div style={{padding:'14px 20px'}}>
+                  <div style={{fontFamily:'DM Sans,sans-serif',fontSize:12,color:'#555',lineHeight:1.7,marginBottom:12}}>{deload.desc}</div>
+                  {deload.rules.map((r,i)=>(
+                    <div key={i} style={{display:'flex',gap:10,alignItems:'flex-start',padding:'9px 11px',background:'#141414',borderRadius:6,border:'1px solid #1e1e1e',marginBottom:6}}>
+                      <span style={{fontSize:15,flexShrink:0}}>{r.icon}</span>
+                      <div>
+                        <div style={{fontFamily:'DM Sans,sans-serif',fontSize:12,fontWeight:500,color:'#ddd',marginBottom:2}}>{r.label}</div>
+                        <div style={{fontFamily:'DM Sans,sans-serif',fontSize:11,color:'#444',lineHeight:1.6}}>{r.detail}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Upgrades */}
+              <div style={{marginTop:20,background:'#0f0f0f',border:'1px solid #2a2a2a',borderRadius:10,overflow:'hidden'}}>
+                <div style={{background:'#141414',padding:'14px 20px',borderBottom:'1px solid #1e1e1e'}}>
+                  <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:18,letterSpacing:'0.08em',color:'#47C8FF'}}>WEEK 5+ EXERCISE UPGRADES</div>
+                  <div style={{fontFamily:'DM Sans,sans-serif',fontSize:11,color:'#444',marginTop:3}}>Evidence-based swaps once your technique base is established</div>
+                </div>
+                <div style={{padding:'14px 20px',display:'flex',flexDirection:'column',gap:8}}>
+                  {[
+                    {from:"Barbell Bent-Over Row",to:"Chest-Supported DB Row",day:"Upper A",reason:"Removes lower back fatigue. Allows full scapular protraction at the bottom for a deeper stretch and more isolated lat contraction."},
+                    {from:"Skull Crushers (EZ-Bar)",to:"Cable Overhead Tricep Extension",day:"Upper B",reason:"Cable maintains constant tension at the stretched position. 2023 study showed overhead extensions drive significantly more long-head tricep growth."},
+                  ].map((u,i)=>(
+                    <div key={i} style={{padding:'11px 13px',background:'#141414',borderRadius:8,border:'1px solid #1e1e1e'}}>
+                      <div style={{display:'flex',alignItems:'center',gap:7,flexWrap:'wrap',marginBottom:7}}>
+                        <div style={{fontFamily:'DM Sans,sans-serif',fontSize:12,color:'#444',textDecoration:'line-through'}}>{u.from}</div>
+                        <div style={{color:'#47C8FF'}}>→</div>
+                        <div style={{fontFamily:'DM Sans,sans-serif',fontSize:12,fontWeight:500,color:'#47C8FF'}}>{u.to}</div>
+                        <div style={{marginLeft:'auto',fontFamily:'DM Sans,sans-serif',fontSize:9,color:'#333',background:'#1e1e1e',padding:'2px 7px',borderRadius:3}}>{u.day}</div>
+                      </div>
+                      <div style={{fontFamily:'DM Sans,sans-serif',fontSize:11,color:'#444',lineHeight:1.6}}>{u.reason}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Eccentric */}
+              <div style={{marginTop:12,padding:'13px 16px',background:'#0f0f0f',border:'1px solid #2a2a2a',borderRadius:8,display:'flex',gap:12,alignItems:'flex-start'}}>
+                <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:26,color:'#E8FF47',lineHeight:1,flexShrink:0}}>2–3s</div>
+                <div>
+                  <div style={{fontFamily:'DM Sans,sans-serif',fontSize:12,fontWeight:500,color:'#ddd',marginBottom:3}}>Eccentric Tempo Rule — every compound lift</div>
+                  <div style={{fontFamily:'DM Sans,sans-serif',fontSize:11,color:'#444',lineHeight:1.65}}>Lower the weight in 2–3 full seconds on every compound. If a rep takes less than 2 seconds on the way down, you're moving too fast.</div>
+                </div>
+              </div>
+
+              <div style={{marginTop:16,fontFamily:'DM Sans,sans-serif',fontSize:10,color:'#2a2a2a',lineHeight:1.8}}>
+                Based on Schoenfeld (2010, 2017), Krieger (2010), Helms et al. (2014). Validated against Jeff Nippard's science-backed methodology.
+              </div>
+            </div>
+          </div>
+        </>}
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
